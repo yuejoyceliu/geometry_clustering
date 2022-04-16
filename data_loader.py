@@ -66,7 +66,7 @@ def data_preprocess(file_list):
 
     for file in file_list:
         data = data_loader(file)
-        distances = MinMaxScaler().fit_transform(data[0])
+        distances = data[0]
         distances = distances[np.triu_indices(len(distances))]
         distances = np.reshape(distances, (1, -1))
         if numerical_data is None:
@@ -77,11 +77,14 @@ def data_preprocess(file_list):
             if hb not in hydrogen_bonds:
                 hydrogen_bonds[hb] = len(hydrogen_bonds)
         categorical_data.append(data[1])
-    print(hydrogen_bonds)
     onehot_data = np.zeros((len(categorical_data), len(hydrogen_bonds)))
     for i, hbonds in enumerate(categorical_data):
         for hb in hbonds:
             onehot_data[i][hydrogen_bonds[hb]] = 1
+    # Filter out distances >= 2.5.
+    min_distances = np.min(numerical_data, axis=0)
+    numerical_data = numerical_data[:, min_distances<2.5]
+    numerical_data = MinMaxScaler().fit_transform(numerical_data)
 
     data = np.concatenate([numerical_data, onehot_data], axis=1)
     return data
