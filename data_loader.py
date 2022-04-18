@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import re, glob
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler

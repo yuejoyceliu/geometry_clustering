@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os,sys, shutil
 import pandas as pd
 from kmeans_traj import cluster_geometry
