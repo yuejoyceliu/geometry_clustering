@@ -87,7 +87,7 @@ def data_preprocess(file_list):
     numerical_data = MinMaxScaler().fit_transform(numerical_data)
 
     data = np.concatenate([numerical_data, onehot_data], axis=1)
-    return data
+    return data, categorical_data
 
 if __name__=='__main__':
-    data = data_preprocess(glob.glob("*.gjf"))
+    data, _ = data_preprocess(glob.glob("*.gjf"))

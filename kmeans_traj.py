@@ -29,7 +29,7 @@ class KmeansBestK:
 
     def __init__(self, file_list, plot=True):
         self.file_list = file_list
-        self.data = data_preprocess(file_list)
+        self.data, self.hbonds = data_preprocess(file_list)
         self.klist = np.arange(1, len(self.file_list)//5)
         self.inertia = Manager().list()
         self.inertia.extend([0]*len(self.klist))
@@ -66,12 +66,12 @@ def cluster_geometry(file_list):
     bestk_index = bestk_finder.find_bestkindex()
     kmeans = bestk_finder.cluster(bestk_index)
     labels = kmeans.labels_
-    return labels
+    return labels, bestk_finder.hbonds
 
 if __name__=='__main__':
     file_list = glob.glob("*gjf")
     file_list.sort()
-    labels = cluster_geometry(file_list)
+    labels, _ = cluster_geometry(file_list)
     for file, label in zip(file_list, labels):
         print(file, label)
 
