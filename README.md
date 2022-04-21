@@ -2,12 +2,9 @@
 Cluster conformers of the biomolecule
 
 ## data_loader.py
-- Function data_loader:
-  - Input: String of a Gaussian input file name.
-  - Output: (distance, hbond). Distance is a numpy 2x2 matrix representing the inter-atomic distances. Hbond is a string list representing all hydrogen bonds in the Gaussian input.
 - Function data_preprocess:
   - Input: String list of Gaussian input file names.
-  - Output: (data, hbonds). Data only keep the distances that smaller than 2.5 angstrom. Data, with shape of (number-of-files, feature-embedding), is composed of normalized distances and one-hot encoded hydrogen bond information. Hbonds is a list of string list that indicate the hydrogen bonds for each file.
+  - Output: (data, hbonds). Data only keep the distances that smaller than 2 angstrom. Data, with shape of (number-of-files, feature-embedding), is composed of normalized distances and one-hot encoded hydrogen bond information. Hbonds is a list of string list that indicate the hydrogen bonds for each file.
 
 ## kmeans_traj.py
 - Function cluster_geometry:
