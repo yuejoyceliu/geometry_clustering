@@ -31,7 +31,7 @@ class KmeansBestK:
     def __init__(self, file_list, plot=True):
         self.file_list = file_list
         self.data, self.hbonds = data_preprocess(file_list)
-        self.klist = np.arange(1, len(self.file_list)//5)
+        self.klist = np.arange(1, len(self.file_list)//5+1)
         self.inertia = Manager().list()
         self.inertia.extend([0]*len(self.klist))
         self.nprocessor = 20

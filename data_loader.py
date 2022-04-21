@@ -13,6 +13,7 @@ class DataLoader:
         self.coordinations = []
         self._load_gaussian_input()
         self.distances = np.zeros((len(self.atomlist), len(self.atomlist)))
+        self.hydrogen_bonds = []
     
     def _load_gaussian_input(self):
         """Finds the atomlist and xyz coordinations of all atoms in the Gaussian input file.
@@ -37,7 +38,6 @@ class DataLoader:
     def find_hydrogen_bonds(self):
         """Returns all hydrogen bonds
         """
-        hydrogen_bonds = []
         NOF_indices = [i for i in range(len(self.atomlist)) if self.atomlist[i] in ['N', 'O', 'F']]
         for i, atom in enumerate(self.atomlist):
             if atom == 'H':
@@ -50,41 +50,54 @@ class DataLoader:
                         hbonded_atom_indices.append(j)
                 for bonded_index in bonded_atom_indices:
                     for hbonded_index in hbonded_atom_indices:
-                        hydrogen_bonds.append("{}{}-H{}-{}{}".format(self.atomlist[bonded_index],
+                        self.hydrogen_bonds.append("{}{}-H{}-{}{}".format(self.atomlist[bonded_index],
                         bonded_index+1, i+1, self.atomlist[hbonded_index], hbonded_index+1))
-        return hydrogen_bonds
+
+    def find_nonxch_hydrogen(self):
+        carbon_hydrogen_idx = []
+        for i, atom in enumerate(self.atomlist):
+            if atom == 'H':
+                self.distances[i, i] = float("inf") 
+                if self.atomlist[np.argmin(self.distances[i])] == 'C':
+                    carbon_hydrogen_idx.append(i)
+                self.distances[i, i] = 0
+        return carbon_hydrogen_idx
 
 def data_loader(filename):
     dataloader = DataLoader(filename)
     dataloader.compute_distances()
-    hbonds = dataloader.find_hydrogen_bonds()
-    return dataloader.distances, hbonds
+    dataloader.find_hydrogen_bonds()
+    return dataloader
 
 def data_preprocess(file_list):
     numerical_data = None
     categorical_data = []
     hydrogen_bonds = dict()
+    carbon_hydrogen_idx = None
 
     for file in file_list:
-        data = data_loader(file)
-        distances = data[0]
+        loader = data_loader(file)
+        if carbon_hydrogen_idx is None:
+            carbon_hydrogen_idx = loader.find_nonxch_hydrogen()
+        distances = np.delete(loader.distances, carbon_hydrogen_idx, axis=0)
+        distances = np.delete(distances, carbon_hydrogen_idx, axis=1)
         distances = distances[np.triu_indices(len(distances))]
         distances = np.reshape(distances, (1, -1))
         if numerical_data is None:
             numerical_data = distances
         else:
             numerical_data = np.concatenate([numerical_data, distances])
-        for hb in data[1]:
+        for hb in loader.hydrogen_bonds:
             if hb not in hydrogen_bonds:
                 hydrogen_bonds[hb] = len(hydrogen_bonds)
-        categorical_data.append(data[1])
+        categorical_data.append(loader.hydrogen_bonds)
     onehot_data = np.zeros((len(categorical_data), len(hydrogen_bonds)))
     for i, hbonds in enumerate(categorical_data):
         for hb in hbonds:
             onehot_data[i][hydrogen_bonds[hb]] = 1
-    # Filter out distances >= 2.5.
+    # Filter out distances >= 2.0.
     min_distances = np.min(numerical_data, axis=0)
-    numerical_data = numerical_data[:, min_distances<2.5]
+    numerical_data = numerical_data[:, min_distances<2.0]
     numerical_data = MinMaxScaler().fit_transform(numerical_data)
 
     data = np.concatenate([numerical_data, onehot_data], axis=1)
