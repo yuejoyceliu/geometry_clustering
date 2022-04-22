@@ -77,10 +77,14 @@ def data_preprocess(file_list):
 
     for file in file_list:
         loader = data_loader(file)
+        # Remove distances of carbon-hydrogens.
         if carbon_hydrogen_idx is None:
             carbon_hydrogen_idx = loader.find_nonxch_hydrogen()
+            print("Carbon-hydrogen index:")
+            print([idx+1 for idx in carbon_hydrogen_idx])
         distances = np.delete(loader.distances, carbon_hydrogen_idx, axis=0)
         distances = np.delete(distances, carbon_hydrogen_idx, axis=1)
+        # Get the upper triangular distance matrix.
         distances = distances[np.triu_indices(len(distances))]
         distances = np.reshape(distances, (1, -1))
         if numerical_data is None:
@@ -95,11 +99,12 @@ def data_preprocess(file_list):
     for i, hbonds in enumerate(categorical_data):
         for hb in hbonds:
             onehot_data[i][hydrogen_bonds[hb]] = 1
-    # Filter out distances >= 2.0.
+    # Filter out distances >= 2.5.
     min_distances = np.min(numerical_data, axis=0)
-    numerical_data = numerical_data[:, min_distances<2.0]
+    numerical_data = numerical_data[:, min_distances<2.5]
     numerical_data = MinMaxScaler().fit_transform(numerical_data)
-
+    print("%d distances are used." % np.shape(numerical_data)[1])
+    print("%d different hydrogen bonds found in %d conformers." % (len(hydrogen_bonds), len(file_list)))
     data = np.concatenate([numerical_data, onehot_data], axis=1)
     return data, categorical_data
 
